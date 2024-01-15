@@ -23,4 +23,11 @@ public class JavaExtensions {
         }
         return sb.toString();
     }
+
+    /**
+     * toUpperCase extension
+     */
+    public static String toUpperCase(String s){
+        return s.toUpperCase();
+    }
 }

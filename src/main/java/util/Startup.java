@@ -9,7 +9,7 @@ import jakarta.enterprise.event.Observes;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.transaction.Transactional;
-import model.Todo;
+import model.Invoice;
 
 @ApplicationScoped
 @Blocking //idk, fromage made it (Transactionnal on method should be enough)
@@ -23,14 +23,17 @@ public class Startup {
     public void start(@Observes StartupEvent evt) {
         // in DEV mode we seed some data
         if(LaunchMode.current() == LaunchMode.DEVELOPMENT) {
-            Todo a = new Todo();
-            a.task = "First item";
-            a.persist();
+            Invoice invoiceDev1 = new Invoice();
+            invoiceDev1.numFacture="NUM-FACTURE-0001";
+            invoiceDev1.dateFacturation = new Date();
+            invoiceDev1.persist();
 
-            Todo b = new Todo();
-            b.task = "Second item";
-            b.completed = new Date();
-            b.persist();
+            Invoice invoiceDev2 = new Invoice();
+            invoiceDev2.numFacture="NUM-FACTURE-0002";
+            invoiceDev2.dateFacturation = new Date();
+            invoiceDev2.persist();
+
+
         }
     }
 }
