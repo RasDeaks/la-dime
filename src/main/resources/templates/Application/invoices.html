@@ -220,6 +220,11 @@
                 Error: {#error 'numFacture'/}
                 </div>
             {/ifError}
+            {#ifError 'dateFacturation'}
+                <div class="error">
+                Error: {#error 'dateFacturation'/}
+                </div>
+            {/ifError}
         {/form}
     </div>
 

@@ -52,6 +52,7 @@ public class Application extends Controller {
     @POST
     public void initInvoice(@Valid Invoice invoice){
         if (validationFailed()){
+            // hibernate validation, return to invoices form with errors
             invoices();
         }
         //System.out.println("DIXX: " + invoice.numFacture + " | " + invoice.dateFacturation);
