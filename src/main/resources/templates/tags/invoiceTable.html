@@ -1,0 +1,22 @@
+
+
+{! Iterate over our invoice items !}
+<div class="table-wrapper">
+    <table class="fl-table">
+        <tr>
+            <th>Numéro</th>
+            <th>Date Facturation</th>
+            <th>Action</th>
+        </tr>
+        {#for invoice in invoices}
+            <tr>
+            {! This invokes the JavaExtensions.capitalise(String) extension method !}
+            <td>{invoice.numFacture.toUpperCase}</td>
+            <td>{invoice.dateFacturation}</td>
+            {! a button to go to detail /invoices/{id} !}
+            <td class="form-style-6"> <input type="button" onclick="window.location.href='{uri:Application.displayInvoice(invoice.id)}'" value="{invoice.numFacture}"></td>
+            </tr>
+        {/for}
+    </table>
+
+</div>

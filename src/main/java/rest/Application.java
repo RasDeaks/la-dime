@@ -47,7 +47,7 @@ public class Application extends Controller {
     }
 
 
-    // Creates a POST action at Todos/initInvoice taking a form element named invoice
+    // Creates a POST action at Application/initInvoice taking a form element named invoice
     @Path("/invoices")
     @POST
     public void initInvoice(@Valid Invoice invoice){
