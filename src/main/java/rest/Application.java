@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import model.Invoice;
+import org.jboss.resteasy.reactive.RestPath;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class Application extends Controller {
          */
         public static native TemplateInstance index();
         public static native TemplateInstance invoices(List<Invoice> invoices);
+        public static native TemplateInstance invoice(Invoice invoice);
     }
 
 
@@ -55,6 +57,13 @@ public class Application extends Controller {
         //System.out.println("DIXX: " + invoice.numFacture + " | " + invoice.dateFacturation);
         invoice.persist();
         invoices();
+    }
+
+    @Path(("/invoice"))
+    public TemplateInstance displayInvoice(@RestPath Long id){
+        Invoice byId = Invoice.findById(id);
+        notFoundIfNull(byId);
+        return Templates.invoice(byId);
     }
 
 
