@@ -63,7 +63,7 @@ public class Application extends Controller {
         if (controlFunc.isNumFactureUnique(invoice.numFacture)){
             // add a renarde "flash" message to the view
             flash("backendError",
-                    String.format("NOPE la facture [%s] existe déja", invoice.numFacture));
+                    String.format("La facture [%s] existe déja, édite là", invoice.numFacture));
             // and redirect to invoices home
             invoices();
         }
