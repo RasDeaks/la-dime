@@ -9,6 +9,8 @@ import io.quarkus.qute.TemplateExtension;
 public class JavaExtensions {
     /**
      * This registers the String.capitalise extension method
+     *
+     * It Turns the first letter of a String to upperCase, nicely*
      */
     public static String capitalise(String string) {
         StringBuilder sb = new StringBuilder();

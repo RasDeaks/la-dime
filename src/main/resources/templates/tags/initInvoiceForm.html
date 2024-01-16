@@ -1,11 +1,10 @@
 {! Form to post some INVOICE !}
 <div class="form-style-6">
   <h1>New facture</h1>
-  {! A form action calling Todos.add() !}
+  {! A form action calling Application.initInvoice() !}
   {#form uri:Application.initInvoice()}
-    <input name="numFacture" placeholder="Numéro de Facture" type="text" {#ifError 'task'}class="error"{/}/>
-    <input name="dateFacturation" placeholder="completed" type="date" value="2024-01-12"
-           {#ifError 'numFacture'}class="error"{/}/>
+    <input name="numFacture" placeholder="Numéro de Facture" type="text" {#ifError 'numFacture'}class="error"{/}/>
+    <input name="dateFacturation" placeholder="completed" type="date" value="2024-01-12" {#ifError 'dateFacturation'}class="error"{/}/>
     <input type="submit" value="Send"/>
     {! We add some information if there's a validation error !}
     {#ifError 'numFacture'}
@@ -18,5 +17,9 @@
       Error: {#error 'dateFacturation'/}
       </div>
     {/ifError}
+    {#if flash:backendError}
+      <div class="error">Error: {flash:backendError}</div>
+    {/if}
+
   {/form}
 </div>

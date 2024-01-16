@@ -4,11 +4,13 @@ import io.quarkiverse.renarde.Controller;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.common.annotation.Blocking;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import model.Invoice;
 import org.jboss.resteasy.reactive.RestPath;
+import service.ControlFunc;
 
 import java.util.List;
 
@@ -17,6 +19,9 @@ import java.util.List;
  */
 @Blocking
 public class Application extends Controller {
+
+    @Inject
+    ControlFunc controlFunc;
     
     /**
      * This defines templates available in src/main/resources/templates/Classname/method.html by convention
@@ -55,7 +60,10 @@ public class Application extends Controller {
             // hibernate validation, return to invoices form with errors
             invoices();
         }
-        //System.out.println("DIXX: " + invoice.numFacture + " | " + invoice.dateFacturation);
+        if (controlFunc.isNumFactureUnique(invoice.numFacture)){
+            flash("backendError", "NOPE elle existe déja");
+            invoices();
+        }
         invoice.persist();
         invoices();
     }

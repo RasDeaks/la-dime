@@ -12,7 +12,7 @@ import java.util.Date;
 public class Invoice extends PanacheEntity {
 
     @RestForm
-    @NotBlank
+    @NotBlank(message = "Le numéro de facture ne peut etre vide")
     public String numFacture;
 
     @RestForm
