@@ -29,7 +29,7 @@ public class Application extends Controller {
     @CheckedTemplate
     public static class Templates {
         /**
-         * This specifies that the Todos/index.html template does not take any parameter
+         * This specifies that the Application/index.html template does not take any parameter
          */
         public static native TemplateInstance index();
         public static native TemplateInstance invoices(List<Invoice> invoices);
@@ -52,18 +52,22 @@ public class Application extends Controller {
     }
 
 
-    // Creates a POST action at Application/initInvoice taking a form element named invoice
     @Path("/invoices")
     @POST
     public void initInvoice(@Valid Invoice invoice){
+        // VALIDATION
+        // hibernate validation : set by annotation, displayed on view with "#error"
         if (validationFailed()){
-            // hibernate validation, return to invoices form with errors
             invoices();
         }
         if (controlFunc.isNumFactureUnique(invoice.numFacture)){
-            flash("backendError", "NOPE elle existe déja");
+            // add a renarde "flash" message to the view
+            flash("backendError",
+                    String.format("NOPE la facture [%s] existe déja", invoice.numFacture));
+            // and redirect to invoices home
             invoices();
         }
+        // ALL GOOD, let's persist and redirect
         invoice.persist();
         invoices();
     }
