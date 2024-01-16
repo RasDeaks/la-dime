@@ -2,7 +2,7 @@
 <div class="form-style-6">
   <h1>New facture</h1>
   {! A form action calling Application.initInvoice() !}
-  {#form uri:Application.initInvoice()}
+  {#form uri:Invoices.initInvoice()}
     <input name="numFacture" placeholder="Numéro de Facture" type="text" {#ifError 'numFacture'}class="error"{/}/>
     <input name="dateFacturation" placeholder="completed" type="date" value="2024-01-12" {#ifError 'dateFacturation'}class="error"{/}/>
     <input type="submit" value="Send"/>

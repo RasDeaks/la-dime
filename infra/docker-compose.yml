@@ -1,0 +1,11 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:12.2
+    container_name: postgres-la-dime
+    environment:
+      POSTGRES_DB: la-dime
+      POSTGRES_USER: sarah
+      POSTGRES_PASSWORD: connor
+    ports:
+      - 5432:5432

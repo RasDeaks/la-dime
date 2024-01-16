@@ -13,8 +13,17 @@
             {! This invokes the JavaExtensions.capitalise(String) extension method !}
             <td>{invoice.numFacture.toUpperCase}</td>
             <td>{invoice.dateFacturation}</td>
-            {! a button to go to detail /invoices/{id} !}
-            <td class="form-style-6"> <input type="button" onclick="window.location.href='{uri:Application.displayInvoice(invoice.id)}'" value="{invoice.numFacture}"></td>
+
+            <td>
+            <div class="form-style-6">
+                {! a button to go to detail /invoices/{id} !}
+                <input type="button" onclick="window.location.href='{uri:Invoices.displayInvoice(invoice.id)}'" value="{invoice.numFacture}">
+                {! a button to delete /invoices/{id} !}
+                {#form uri:Invoices.delete(invoice.id) }
+                    <button class="btn">Delete</button>
+                {/form}
+            </div>
+            </td>
             </tr>
         {/for}
     </table>
