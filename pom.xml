@@ -13,6 +13,7 @@
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.version>3.6.5</quarkus.platform.version>
+    <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.1.2</surefire-plugin.version>
   </properties>
@@ -28,17 +29,36 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
+    <!-- Web Framework -->
     <dependency>
       <groupId>io.quarkiverse.renarde</groupId>
       <artifactId>quarkus-renarde</artifactId>
       <version>3.0.7</version>
     </dependency>
     <dependency>
+      <groupId>io.quarkiverse.web-bundler</groupId>
+      <artifactId>quarkus-web-bundler</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mvnpm</groupId>
+      <artifactId>bootstrap</artifactId>
+      <version>5.3.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mvnpm</groupId>
+      <artifactId>bootstrap-icons</artifactId>
+      <version>1.10.5</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- Security -->
+    <dependency>
       <groupId>io.quarkiverse.renarde</groupId>
       <artifactId>quarkus-renarde-oidc</artifactId>
       <version>3.0.7</version>
     </dependency>
-
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-security-webauthn</artifactId>
@@ -47,12 +67,14 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-test-security-webauthn</artifactId>
     </dependency>
+
+    <!-- Mail -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-mailer</artifactId>
     </dependency>
 
-
+    <!-- Database -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-hibernate-orm-panache</artifactId>
@@ -61,16 +83,19 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-jdbc-postgresql</artifactId>
     </dependency>
+    <!-- CDI -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
     </dependency>
+    <!-- Tests -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -137,7 +162,6 @@
         </property>
       </activation>
       <properties>
-        <skipITs>false</skipITs>
         <quarkus.package.type>native</quarkus.package.type>
       </properties>
     </profile>

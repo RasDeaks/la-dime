@@ -51,9 +51,10 @@ public class Invoices extends ControllerWithUser<User> {
             // and redirect to invoices home
             invoices();
         }
-        // ALL GOOD, let's persist and redirect
+        // valid? let's persist
         invoice.user = getUser();
         invoice.persist();
+        // redirect to Invoices list
         invoices();
     }
 

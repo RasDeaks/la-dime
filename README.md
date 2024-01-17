@@ -1,8 +1,8 @@
 # la-dime
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Ce projet use Quarkus, le cadriciel Supersonique Subatomique Java.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+Quarkus ? -> website: https://quarkus.io/ .
 
 ## WTF ?
 
@@ -10,12 +10,12 @@ La dime c'est pour demat' de la Facture
 
 1. Je créé des factures
    * html FORM
-   * UBL/CII file upload
+   * UBL/CII file upload*
 2. Je les valide*
    * Structure (cardinalité, enum)
    * Fonc (xslt, chematorn, siren/siret/routage)
-3. Je les range secure pour mes utilisateurs enregistrés*
-   * OAUTH
+3. Je les range secure pour mes utilisateurs enregistrés
+   * OIDC (in progress)
    * Gestion par entreprise
 4. Je les affiche en PDF, xml, HTML*
    * Nice UX lol!

@@ -8,4 +8,4 @@ services:
       POSTGRES_USER: sarah
       POSTGRES_PASSWORD: connor
     ports:
-      - 5432:5432
+      - 5435:5432

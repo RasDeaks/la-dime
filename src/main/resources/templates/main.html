@@ -15,6 +15,7 @@
         }
 
     </style>
+    {#bundle /}
     {#insert moreStyles /}
     {#insert moreScripts /}
 </head>
@@ -28,15 +29,27 @@
         {! If an user is logged displey his name !}
         {! fixme style !!}
         <div style="margin-inline-end:60%; direction: rtl;">
-        <div>{inject:user.userName}</div>
+        {#user inject:user/}
         </div>
     {#else}
         <div><a href="{uri:Login.login}">Login</a></div>
     {/if}
 
 </div>
-
+<main class="container">
+{#if flash:message}
+    <div class="alert alert-{flash:messageType ?: 'success'}">
+    {flash:message}
+    </div>
+{/if}
 <!-- This inserts the body of your templates -->
 {#insert /}
+</main>
+<div class="container-fluid fixed-bottom">
+    <footer>
+        <hr />
+        © DiQs 2013-2024 <i class="bi-heart-fill"></i>
+    </footer>
+</div>
 </body>
 </html>
