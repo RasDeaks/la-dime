@@ -17,7 +17,7 @@
             <td>
             <div class="form-style-6">
                 {! a button to go to detail /invoices/{id} !}
-                <input type="button" onclick="window.location.href='{uri:Invoices.displayInvoice(invoice.id)}'" value="{invoice.numFacture}">
+                <input type="button" onclick="window.location.href='{uri:Invoices.displayInvoice(invoice.id)}'" value="{invoice.numFacture.capitalise}">
                 {! a button to delete /invoices/{id} !}
                 {#form uri:Invoices.delete(invoice.id) }
                     <button class="btn1">Delete</button>

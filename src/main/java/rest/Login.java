@@ -1,27 +1,12 @@
 package rest;
 
-import java.util.UUID;
-
-import jakarta.inject.Inject;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.NewCookie;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.ResponseBuilder;
-
-import org.hibernate.validator.constraints.Length;
-import org.jboss.resteasy.reactive.RestForm;
-import org.jboss.resteasy.reactive.RestQuery;
-
 import email.Emails;
 import io.quarkiverse.renarde.router.Router;
 import io.quarkiverse.renarde.security.ControllerWithUser;
 import io.quarkiverse.renarde.security.RenardeSecurity;
 import io.quarkiverse.renarde.util.StringUtils;
 import io.quarkus.elytron.security.common.BcryptUtil;
+import io.quarkus.logging.Log;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
@@ -31,12 +16,32 @@ import io.quarkus.security.webauthn.WebAuthnSecurity;
 import io.smallrye.common.annotation.Blocking;
 import io.vertx.ext.auth.webauthn.Authenticator;
 import io.vertx.ext.web.RoutingContext;
+import jakarta.inject.Inject;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
 import model.User;
 import model.UserStatus;
 import model.WebAuthnCredential;
+import org.hibernate.validator.constraints.Length;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestQuery;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.UUID;
 
 @Blocking
 public class Login extends ControllerWithUser<User>{
+    @Context HttpHeaders headers;
 
     @Inject
     RenardeSecurity security;
@@ -55,8 +60,46 @@ public class Login extends ControllerWithUser<User>{
 
     /**
      * Login page
+     *
+     * override to fix q_auth cookie issue on oidcFailure
      */
-    public TemplateInstance login() {
+    @Path("/login")
+    public Response login2() {
+        // DIX try to fix INVALID user on oidc failure
+        // need to clean q_auth_* cookie as user was never saved with tenantID when it fails
+        // ex: q_auh_goole_UUID_XX_XXXX cookie will look for userName with tenant google, wich is saved on oidcSucces
+        // see RenardeSecurity makeLogoutResponse
+        headers.getCookies().entrySet().forEach(stringCookieEntry -> {
+            Log.info(stringCookieEntry.getKey() + " | " + stringCookieEntry.getValue().getName() + ":" + stringCookieEntry.getValue().getValue() );
+        });
+        List<String> qAuthCookieFound = headers.getCookies().keySet().stream()
+                .filter(cookie -> cookie.startsWith("q_auth"))
+                .toList();
+        Log.info("qAuthCookieFound (1)= " + qAuthCookieFound.size());
+
+        // reset all auth cookie
+        List<NewCookie> cookiesToRemove = qAuthCookieFound.stream()
+                .map(s -> {
+                    Log.info("try to cancel cookie : " + s);
+                    return new NewCookie.Builder(s)
+                            .sameSite(NewCookie.SameSite.LAX)
+                            .maxAge(0)
+                            .build();
+                })
+                .toList();
+        return Response.seeOther(Router.getURI(Login::login)).cookie(cookiesToRemove.toArray(new NewCookie[0])).build();
+    }
+
+    public TemplateInstance login(){
+        // tricks to proper Logout
+        List<String> qAuthCookieFound = headers.getCookies().keySet().stream()
+                .filter(cookieName -> cookieName.startsWith("q_auth"))
+                .toList();
+        Log.info("qAuthCookieFound (2)= " + qAuthCookieFound.size());
+        if (!qAuthCookieFound.isEmpty()){
+            login2();
+        }
+        // end tricks
         return Templates.login();
     }
 
@@ -145,7 +188,14 @@ public class Login extends ControllerWithUser<User>{
 
     @Path("/logout")
     public Response logout(){
-        return security.makeLogoutResponse();
+        // might have an issue here. Some auth cookie might need to be cleaned
+        // see RenardeSecurityController.logout()
+        try {
+            return security.makeLogoutResponse(new URI("/"));
+        } catch (URISyntaxException e) {
+            //can't happen
+            throw new RuntimeException(e);
+        }
     }
 
     private void checkLogoutFirst() {

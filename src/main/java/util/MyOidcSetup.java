@@ -8,6 +8,7 @@ import io.quarkiverse.renarde.security.RenardeUser;
 import io.quarkiverse.renarde.security.RenardeUserProvider;
 import io.quarkiverse.renarde.util.Flash;
 import io.quarkiverse.renarde.util.RedirectException;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -34,6 +35,7 @@ public class MyOidcSetup implements RenardeUserProvider, RenardeOidcHandler {
 
     @Override
     public RenardeUser findUser(String tenantId, String id) {
+        Log.info("Renarde provider looking for : " + id + " | " + tenantId);
         if(tenantId == null || tenantId.equals("manual")) {
             return User.findByUserName(id);
         } else {
