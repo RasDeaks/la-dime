@@ -11,6 +11,9 @@ import java.util.Set;
 @Table(name = "user_table", uniqueConstraints = @UniqueConstraint(columnNames = {"tenantId", "authId"}))
 public class User extends PanacheEntity implements RenardeUser {
 
+    @ManyToOne
+    public Entreprise entreprise;
+
     @Column(nullable = false)
     public String email;
     @Column(unique = true)

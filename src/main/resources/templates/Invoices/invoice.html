@@ -20,10 +20,30 @@
     <div>
     {#form uri:Invoices.updateInvoice(invoice.id, invoice)}
         <fieldset>
-        <label for="numFacture">Numéro de facture</label>
-        <input name="numFacture" value={invoice.numFacture} readonly/>
-        <button type="submit" class="btn btn-primary">Update ma facture</button>
+            <div>
+            <label for="numFacture">Numéro de facture</label>
+            <input name="numFacture" value={invoice.numFacture} readonly/>
+            </div>
+
+            <div>
+            <label for="vendeur">Le vendeur :</label>
+            <select name="sirenVendeur" id="vendeur">
+                <optgroup label="Current Vendeur">
+                <option value={invoice.vendeur.siren}>{invoice.vendeur.raisonSocial}</option>
+                </optgroup>§
+                <optgroup label="Or new Vendeur">
+                {#for entreprise in entreprises}
+                <option value={entreprise.siren}>{entreprise.raisonSocial}</option>
+                {/for}
+                </optgroup>
+            </select>
+            </div>
+
+            <div>
+            <button type="submit" class="btn btn-primary">Update ma facture</button>
+            </div>
         </fieldset>
+
     {/form}
     </div>
 

@@ -17,6 +17,12 @@ public class Invoice extends PanacheEntity {
     @ManyToOne
     public User user;
 
+    @ManyToOne
+    public Entreprise acheteur;
+
+    @ManyToOne
+    public Entreprise vendeur;
+
     @RestForm
     @NotBlank(message = "Le numéro de facture ne peut etre vide")
     public String numFacture;

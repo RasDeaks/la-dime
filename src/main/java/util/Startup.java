@@ -10,6 +10,7 @@ import jakarta.enterprise.event.Observes;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.transaction.Transactional;
+import model.Entreprise;
 import model.Invoice;
 import model.User;
 import model.UserStatus;
@@ -26,6 +27,19 @@ public class Startup {
     public void start(@Observes StartupEvent evt) {
         // in DEV mode we seed some data
         if(LaunchMode.current() == LaunchMode.DEVELOPMENT) {
+
+            System.err.println("Adding entreprise lunatech");
+            Entreprise lunatech = new Entreprise();
+            lunatech.raisonSocial = "Lunatec France S.A.S.";
+            lunatech.siren = "818618977";
+            lunatech.persist();
+
+            System.err.println("Adding entreprise red hat");
+            Entreprise redHat = new Entreprise();
+            redHat.raisonSocial = "Red Hat France";
+            redHat.siren = "421199464";
+            redHat.persist();
+
             System.err.println("Adding user fromage");
             User stef = new User();
             stef.email = "fromage@example.com";
@@ -35,6 +49,7 @@ public class Startup {
             stef.password = BcryptUtil.bcryptHash("1q2w3e4r");
             stef.status = UserStatus.REGISTERED;
             stef.isAdmin = true;
+            stef.entreprise = redHat;
             stef.persist();
 
             System.err.println("Adding user dix");
@@ -46,20 +61,28 @@ public class Startup {
             dix.password = BcryptUtil.bcryptHash("P455W0RD");
             dix.status = UserStatus.REGISTERED;
             dix.isAdmin = true;
+            dix.entreprise = lunatech;
             dix.persist();
 
+            System.err.println("Adding facture 001");
+            // Fromage de RedHat facture un PC a lunatech
+            Invoice invoiceFromage = new Invoice();
+            invoiceFromage.numFacture="NUM-FACTURE-0001";
+            invoiceFromage.dateFacturation = new Date();
+            invoiceFromage.user = stef;
+            invoiceFromage.acheteur = lunatech;
+            invoiceFromage.vendeur = redHat;
+            invoiceFromage.persist();
 
-            Invoice invoiceDev1 = new Invoice();
-            invoiceDev1.numFacture="NUM-FACTURE-0001";
-            invoiceDev1.dateFacturation = new Date();
-            invoiceDev1.user = stef;
-            invoiceDev1.persist();
-
-            Invoice invoiceDev2 = new Invoice();
-            invoiceDev2.numFacture="NUM-FACTURE-0002";
-            invoiceDev2.dateFacturation = new Date();
-            invoiceDev2.user = stef;
-            invoiceDev2.persist();
+            System.err.println("Adding facture 002");
+            // Dix de Lunatech facture un conseil à RedHat
+            Invoice invoiceDix = new Invoice();
+            invoiceDix.numFacture="NUM-FACTURE-0002";
+            invoiceDix.dateFacturation = new Date();
+            invoiceDix.user = dix;
+            invoiceDix.acheteur = redHat;
+            invoiceDix.vendeur = lunatech;
+            invoiceDix.persist();
 
 
         }

@@ -14,8 +14,10 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
+import model.Entreprise;
 import model.Invoice;
 import model.User;
+import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 import service.ControlFunc;
 
@@ -31,7 +33,7 @@ public class Invoices extends ControllerWithUser<User> {
     @CheckedTemplate
     public static class Templates{
         public static native TemplateInstance invoices(List<Invoice> invoices);
-        public static native TemplateInstance invoice(Invoice invoice);
+        public static native TemplateInstance invoice(Invoice invoice, List<Entreprise> entreprises);
     }
 
     @Path("/invoices")
@@ -69,9 +71,17 @@ public class Invoices extends ControllerWithUser<User> {
 
     @Path(("/invoice"))
     @POST
-    public void updateInvoice(@RestPath Long invoiceId, @Valid Invoice invoice){
+    public void updateInvoice(@RestPath Long invoiceId, Invoice dto, @RestForm("sirenVendeur") String sirenVendeur){
         checkUserStatus(getUser());
-        invoice.persist();
+
+        // find Facture or 404
+        Invoice byId = Invoice.findById(invoiceId);
+        notFoundIfNull(byId);
+
+        // update value and save
+        // fixme: nested object 'vendeur' always null in DTO -> query param vendeur.siren ignored, renamed to sirenVendeur
+        byId.vendeur = (Entreprise) Entreprise.find("siren", sirenVendeur).firstResult();
+        byId.persist();
         displayInvoice(invoiceId);
     }
 
@@ -86,7 +96,7 @@ public class Invoices extends ControllerWithUser<User> {
         if (!byId.user.id.equals(getUser().id)) {
             forbidden("Not your Facture");
         }
-        return Templates.invoice(byId);
+        return Templates.invoice(byId, Entreprise.listAll());
     }
 
     @POST
