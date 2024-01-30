@@ -10,23 +10,21 @@ La dime c'est pour demat' de la Facture
 
 1. Je créé des factures
    * html FORM
-   * UBL/CII file upload*
-2. Je les valide*
+   * ~~UBL/CII file upload~~
+2. Je les valide
    * Structure (cardinalité, enum)
-   * Fonc (xslt, chematorn, siren/siret/routage)
+   * ~~Fonc (xslt, chematorn, siren/siret/routage)~~
 3. Je les range secure pour mes utilisateurs enregistrés
    * OIDC (in progress)
-   * Gestion par entreprise
-4. Je les affiche en PDF, xml, HTML*
-   * Nice UX lol!
-   * Polymorphe UBL/CII -> Entité -> Form/HTML
-5. (Je sais les adresser..)*
-   * Vérification des SIREN
-   * Appel Annuaire
+   * ~~Gestion par entreprise~~
+4. ~~Je les affiche en PDF, xml, HTML~~
+   * ~~Nice UX lol!~~
+   * ~~Polymorphe UBL/CII -> Entité -> Form/HTML~~
+5. ~~(Je sais les adresser..)~~
+   * ~~Vérification des SIREN~~
+   * ~~Appel Annuaire~~
 
- 
-    
-*not impl
+
 
 
 #
