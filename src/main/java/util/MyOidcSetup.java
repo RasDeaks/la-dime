@@ -35,7 +35,7 @@ public class MyOidcSetup implements RenardeUserProvider, RenardeOidcHandler {
 
     @Override
     public RenardeUser findUser(String tenantId, String id) {
-        Log.info("Renarde provider looking for : " + id + " | " + tenantId);
+        Log.info("Renarde provider db looking for : " + id + " | " + tenantId);
         if(tenantId == null || tenantId.equals("manual")) {
             return User.findByUserName(id);
         } else {
@@ -81,7 +81,7 @@ public class MyOidcSetup implements RenardeUserProvider, RenardeOidcHandler {
 
     @Override
     public void loginWithOidcSession(String tenantId, String authId) {
-        RenardeUser user = findUser(tenantId, authId);
+        User user = (User)findUser(tenantId, authId);
         // old cookie, no such user
         if(user == null) {
             flash.flash("message", "Invalid user: "+authId);
@@ -90,9 +90,10 @@ public class MyOidcSetup implements RenardeUserProvider, RenardeOidcHandler {
         // redirect to registration
         URI uri;
         if(!user.registered()) {
-            uri = Router.getURI(Login::confirm, ((User)user).confirmationCode);
+            uri = Router.getURI(Login::confirm, user.confirmationCode);
         } else {
-            flash.flash("message", "Already logged in");
+            flash.flash("message", "Already logged in with " +
+                    (user.tenantId == null ? "manual": user.tenantId) +", only one method allowed");
             uri = Router.getURI(Application::index);
         }
         throw new RedirectException(Response.seeOther(uri).build());

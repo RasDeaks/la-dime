@@ -4,6 +4,7 @@ import email.Emails;
 import io.quarkiverse.renarde.router.Router;
 import io.quarkiverse.renarde.security.ControllerWithUser;
 import io.quarkiverse.renarde.security.RenardeSecurity;
+import io.quarkiverse.renarde.util.RedirectException;
 import io.quarkiverse.renarde.util.StringUtils;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.logging.Log;
@@ -60,47 +61,44 @@ public class Login extends ControllerWithUser<User>{
 
     /**
      * Login page
-     *
-     * override to fix q_auth cookie issue on oidcFailure
+     * Check is user already logged and q_auth cookie relic
      */
     @Path("/login")
-    public Response login2() {
-        // DIX try to fix INVALID user on oidc failure
-        // need to clean q_auth_* cookie as user was never saved with tenantID when it fails
-        // ex: q_auh_goole_UUID_XX_XXXX cookie will look for userName with tenant google, wich is saved on oidcSucces
-        // see RenardeSecurity makeLogoutResponse
-        headers.getCookies().entrySet().forEach(stringCookieEntry -> {
-            Log.info(stringCookieEntry.getKey() + " | " + stringCookieEntry.getValue().getName() + ":" + stringCookieEntry.getValue().getValue() );
-        });
-        List<String> qAuthCookieFound = headers.getCookies().keySet().stream()
-                .filter(cookie -> cookie.startsWith("q_auth"))
-                .toList();
-        Log.info("qAuthCookieFound (1)= " + qAuthCookieFound.size());
-
-        // reset all auth cookie
-        List<NewCookie> cookiesToRemove = qAuthCookieFound.stream()
-                .map(s -> {
-                    Log.info("try to cancel cookie : " + s);
-                    return new NewCookie.Builder(s)
-                            .sameSite(NewCookie.SameSite.LAX)
-                            .maxAge(0)
-                            .build();
-                })
-                .toList();
-        return Response.seeOther(Router.getURI(Login::login)).cookie(cookiesToRemove.toArray(new NewCookie[0])).build();
-    }
-
     public TemplateInstance login(){
-        // tricks to proper Logout
-        List<String> qAuthCookieFound = headers.getCookies().keySet().stream()
-                .filter(cookieName -> cookieName.startsWith("q_auth"))
-                .toList();
-        Log.info("qAuthCookieFound (2)= " + qAuthCookieFound.size());
-        if (!qAuthCookieFound.isEmpty()){
-            login2();
+        // early exit : can't access page if already logged
+        if (getUser() !=null){
+            flash.flash("message","You are already logged, please logout to reconnect");
+            throw new RedirectException(Response.seeOther(Router.getURI(Application::index)).build());
+        }
+
+        // tricks to proper Logout (q_auth failure fix) : clear auth cookie
+        boolean gAuthCookieFound = headers.getCookies().keySet().stream()
+                .anyMatch(cookieName -> cookieName.startsWith("q_auth"));
+        if (gAuthCookieFound){
+            Log.info("auth cookie found at login ! redirect to /clearAuthCookie");
+            clearAuthCookie();
         }
         // end tricks
+
+        // not logged and not on oidc registration -> let him create an account
         return Templates.login();
+    }
+
+    @Path("/clearAuthCookie")
+    public Response clearAuthCookie() {
+        // DIX try to fix INVALID user on oidc failure
+        // need to clean q_auth_* cookie as user was never saved with tenantID when it fails
+        // ex: q_auh_goole_UUID_XX_XXXX cookie will look for userName with tenant google, which is saved on oidcSuccess
+        // see RenardeSecurity makeLogoutResponse
+        List<NewCookie> cookiesToRemove = headers.getCookies().keySet().stream()
+                .filter(cookie -> cookie.startsWith("q_auth"))
+                .map(s -> new NewCookie.Builder(s)
+                        .sameSite(NewCookie.SameSite.LAX)
+                        .maxAge(0)
+                        .build())
+                .toList();
+        Log.info("clear " + cookiesToRemove.size() + " auth cookie(s)");
+        return Response.seeOther(Router.getURI(Login::login)).cookie(cookiesToRemove.toArray(new NewCookie[0])).build();
     }
 
     /**
@@ -161,8 +159,12 @@ public class Login extends ControllerWithUser<User>{
      */
     @POST
     public TemplateInstance register(@RestForm @NotBlank @Email String email) {
-        if(validationFailed())
+        // early exit on email pattern
+        if(validationFailed()) {
             login();
+        }
+        // find user in DB by mail in case he already tried
+        // or create a new user (regular case)
         User newUser = User.findUnconfirmedByEmail(email);
         if(newUser == null) {
             newUser = new User();
@@ -171,7 +173,7 @@ public class Login extends ControllerWithUser<User>{
             newUser.confirmationCode = UUID.randomUUID().toString();
             newUser.persist();
         }
-        // send the confirmation code again
+        // send the confirmation code
         Emails.confirm(newUser);
         return Templates.register(email);
     }
@@ -191,7 +193,7 @@ public class Login extends ControllerWithUser<User>{
         // might have an issue here. Some auth cookie might need to be cleaned
         // see RenardeSecurityController.logout()
         try {
-            return security.makeLogoutResponse(new URI("/"));
+            return security.makeLogoutResponse(new URI("/renarde"));
         } catch (URISyntaxException e) {
             //can't happen
             throw new RuntimeException(e);

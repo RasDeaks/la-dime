@@ -11,10 +11,21 @@
     {/moreStyles}
 
 
-<div>
-    <h1>Detail Facture [{invoice.numFacture.toUpperCase}] </h1>
+    <div>
+        <h1>Detail Facture [{invoice.numFacture.toUpperCase}] </h1>
+    </div>
 
-</div>
+    <br/>
+
+    <div>
+    {#form uri:Invoices.updateInvoice(invoice.id, invoice)}
+        <fieldset>
+        <label for="numFacture">Numéro de facture</label>
+        <input name="numFacture" value={invoice.numFacture} readonly/>
+        <button type="submit" class="btn btn-primary">Update ma facture</button>
+        </fieldset>
+    {/form}
+    </div>
 
 
 

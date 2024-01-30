@@ -1,55 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <!-- You can pass parameters from your templates to your main template and insert them -->
-    <title>{#insert title}{/insert}</title>
-    <style type="text/css">
-        .head {
-            border-bottom: 1px solid black;
-            margin-bottom: 1em;
-        }
+    <head>
+        <!-- You can pass parameters from your templates to your main template and insert them -->
+        <title>{#insert title}{/insert}</title>
+        <link rel="icon"
+              href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>😎</text></svg>">
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <style type="text/css">
+            .head {
+                border-bottom: 1px solid black;
+                margin-bottom: 1em;
+            }
 
-        .head div {
-            display: inline-block;
-            margin: 0.5em;
-        }
+            .head div {
+                display: inline-block;
+                margin: 0.5em;
+            }
 
-    </style>
-    {#bundle /}
-    {#insert moreStyles /}
-    {#insert moreScripts /}
-</head>
-<body>
-<div class="head">
-    <!-- You can make links to actions using the uri: namespace -->
-    <div><a href="{uri:Application.index}">Index</a></div>
-    {#if inject:user}
-        <div><a href="{uri:Login.logout}">Logout</a></div>
-        <div><a href="{uri:Invoices.invoices}">Invoices</a></div>
-        {! If an user is logged displey his name !}
-        {! fixme style !!}
-        <div style="margin-inline-end:60%; direction: rtl;">
-        {#user inject:user/}
-        </div>
-    {#else}
-        <div><a href="{uri:Login.login}">Login</a></div>
-    {/if}
-
-</div>
-<main class="container">
-{#if flash:message}
-    <div class="alert alert-{flash:messageType ?: 'success'}">
-    {flash:message}
+        </style>
+        {#bundle /}
+        {#insert moreStyles /}
+        {#insert moreScripts /}
+    </head>
+    <body>
+    <div class="head">
+        <!-- You can make links to actions using the uri: namespace -->
+        <div><a href="{uri:Application.index}">Index</a></div>
+        {#if inject:user}
+            <div><a href="{uri:Login.logout}">Logout</a></div>
+            <div><a href="{uri:Invoices.invoices}">Invoices</a></div>
+            {! If an user is logged displey his name !}
+            {! fixme style !!}
+            <div style="margin-inline-end:60%; direction: rtl;">
+                {#user inject:user/}
+            </div>
+            {#else}
+                <div><a href="{uri:Login.login}">Login</a></div>
+        {/if}
     </div>
-{/if}
-<!-- This inserts the body of your templates -->
-{#insert /}
-</main>
-<div class="container-fluid fixed-bottom">
-    <footer>
-        <hr />
-        © DiQs 2013-2024 <i class="bi-heart-fill"></i>
-    </footer>
-</div>
-</body>
+    <main class="container">
+        {#if flash:message}
+            <div class="alert alert-{flash:messageType ?: 'success'}">
+            {flash:message}
+            </div>
+        {/if}
+        <!-- This inserts the body of your templates -->
+        {#insert /}
+    </main>
+    <div class="container-fluid fixed-bottom">
+        <footer>
+            <hr/>
+            © DiQs 2013-2024 <i class="bi-heart-fill"></i>
+        </footer>
+    </div>
+    </body>
 </html>
