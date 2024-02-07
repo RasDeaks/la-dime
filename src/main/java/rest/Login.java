@@ -75,8 +75,8 @@ public class Login extends ControllerWithUser<User>{
         boolean gAuthCookieFound = headers.getCookies().keySet().stream()
                 .anyMatch(cookieName -> cookieName.startsWith("q_auth"));
         if (gAuthCookieFound){
-            Log.info("auth cookie found at login ! redirect to /clearAuthCookie");
-            clearAuthCookie();
+            Log.info("auth cookie found at login ! redirect to /clearStateCookie");
+            clearStateCookie();
         }
         // end tricks
 
@@ -84,8 +84,8 @@ public class Login extends ControllerWithUser<User>{
         return Templates.login();
     }
 
-    @Path("/clearAuthCookie")
-    public Response clearAuthCookie() {
+    @Path("/clearStateCookie")
+    public Response clearStateCookie() {
         // DIX try to fix INVALID user on oidc failure
         // need to clean q_auth_* cookie as user was never saved with tenantID when it fails
         // ex: q_auh_goole_UUID_XX_XXXX cookie will look for userName with tenant google, which is saved on oidcSuccess

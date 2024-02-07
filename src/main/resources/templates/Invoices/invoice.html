@@ -33,7 +33,7 @@
                 </optgroup>§
                 <optgroup label="Or new Vendeur">
                 {#for entreprise in entreprises}
-                <option value={entreprise.siren}>{entreprise.raisonSocial}</option>
+                <option value={entreprise.siren}>{entreprise.raisonSocial} ({entreprise.siren})</option>
                 {/for}
                 </optgroup>
             </select>
