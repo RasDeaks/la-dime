@@ -30,7 +30,7 @@ public class Startup {
 
             System.err.println("Adding entreprise lunatech");
             Entreprise lunatech = new Entreprise();
-            lunatech.raisonSocial = "Lunatec France S.A.S.";
+            lunatech.raisonSocial = "Lunatech France S.A.S.";
             lunatech.siren = "818618977";
             lunatech.persist();
 

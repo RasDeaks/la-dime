@@ -1,0 +1,25 @@
+{#include main.html}
+    {#title}Company{/title}
+
+
+        <div class="table-wrapper">
+            <table class="fl-table">
+                <tr>
+                    <th>User Name</th>
+                    <th>Company</th>
+                </tr>
+                {#for user in users}
+                    <tr>
+                    <td>{user.userName}</td>
+                     {#if user.entreprise}
+                    <td>{user.entreprise.raisonSocial}</td>
+                    {#else}
+                         <td>NO COMPANY YET</td>
+                     {/if}
+                    </tr>
+                {/for}
+            </table>
+        </div>
+
+
+{/include}

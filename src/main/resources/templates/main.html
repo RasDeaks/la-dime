@@ -31,10 +31,14 @@
             <div><a href="{uri:Login.logout}">Logout</a></div>
             <div><a href="{uri:Invoices.invoices}">Invoices</a></div>
             <div><a href="{uri:Entreprises.entreprises}">Company</a></div>
+            {#if inject:user.isAdmin}
+                <div><a href="{uri:Users.users}">Users</a></div>
+            {/if}
+
             {! If an user is logged displey his name !}
             {! fixme style !!}
             <div style="margin-inline-end:60%; direction: rtl;">
-                {#user inject:user/}
+                <a href="{uri:Users.user}"> {#user inject:user/} </a>
             </div>
             {#else}
                 <div><a href="{uri:Login.login}">Login</a></div>
@@ -52,7 +56,7 @@
     <div class="container-fluid fixed-bottom">
         <footer>
             <hr/>
-            © DiQs 2013-2024 <i class="bi-heart-fill"></i>
+            © DiQs 2013-2024 <i class="bi-heart-fill"></i> Powered by Quarkus Renarde
         </footer>
     </div>
     </body>

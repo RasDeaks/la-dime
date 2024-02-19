@@ -1,0 +1,65 @@
+{#include main.html}
+    {#title}Mon compte{/title}
+    {! Add some CSS !}
+    {#moreStyles}
+        <style>
+            .error {
+                color: red;
+                border-color: red;
+            }
+        </style>
+    {/moreStyles}
+
+
+    <div>
+        <h1>whoami [{user.userName}] </h1>
+    </div>
+
+    <br/>
+
+    <div>
+    {#form uri:Users.updateUser(user.firstName, user.lastName)}
+        <fieldset>
+        <div>
+            <label for="userName">User Name</label>
+            <input name="username" value={user.userName} readonly />
+        </div>
+        <div>
+            <label for="firstName">First Name</label>
+            <input  name="firstName" value={user.firstName} />
+        </div>
+
+        <div>
+            <label for="lastName">Last Name</label>
+            <input name="lastName" value={user.lastName} />
+        </div>
+        <div>
+        <label for="entreprise">Société</label>
+            {#if user.entreprise}
+        <input name="entreprise" value={user.entreprise.raisonSocial} readonly />
+            {#else}
+                <input name="entreprise" value="NONE" readonly />
+            {/if}
+        </div>
+        <div>
+        <label for="tenantId">Méthode de connection</label>
+        {#if user.tenantId}
+        <input name="tenantId" value={user.tenantId} readonly />
+            {#if user.tenantId.isApple}
+                <button href="{uri:Users.revokeApple(user)}" >Revoke</button>
+            {/if}
+            {#else}
+                <input name="tenantId" value="Manual" readonly />
+        {/if}
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+        </fieldset>
+
+    {/form}
+    </div>
+
+
+
+{/include}

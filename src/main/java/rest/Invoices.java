@@ -64,6 +64,7 @@ public class Invoices extends ControllerWithUser<User> {
         }
         // valid? let's persist
         invoice.user = user;
+        invoice.vendeur =(Entreprise) Entreprise.find("siren", 818618977).firstResult();
         invoice.persist();
         // redirect to Invoices list
         invoices();

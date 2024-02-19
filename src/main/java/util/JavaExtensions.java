@@ -32,4 +32,8 @@ public class JavaExtensions {
     public static String toUpperCase(String s){
         return s.toUpperCase();
     }
+
+    public static boolean isApple(String s ) { return "apple".equalsIgnoreCase(s);}
+
+
 }

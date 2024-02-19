@@ -16,9 +16,6 @@ import service.ControlFunc;
 @Blocking
 public class Application extends ControllerWithUser<User> {
 
-    @Inject
-    ControlFunc controlFunc;
-    
     /**
      * This defines templates available in src/main/resources/templates/Classname/method.html by convention
      */
