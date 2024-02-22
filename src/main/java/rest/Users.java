@@ -2,22 +2,25 @@ package rest;
 
 import io.quarkiverse.renarde.security.ControllerWithUser;
 import io.quarkiverse.renarde.security.RenardeSecurity;
+import io.quarkiverse.renarde.util.RedirectException;
 import io.quarkus.logging.Log;
+import io.quarkus.oidc.AccessTokenCredential;
 import io.quarkus.oidc.IdToken;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
-import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.Response;
 import model.User;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.RestForm;
-import util.DixUtils;
+import service.RenardeAppleClient;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,6 +36,22 @@ public class Users extends ControllerWithUser<User> {
     @Inject
     @IdToken
     JsonWebToken jwt;
+
+    @Inject
+    AccessTokenCredential accessToken;
+
+
+    @ConfigProperty(name = "quarkus.oidc.apple.client-id")
+    String appleClientId;
+
+    @ConfigProperty(name = "quarkus.oidc.apple.client-secret")
+    String appleClientSecret;
+
+
+    @RestClient
+    RenardeAppleClient renardeAppleClient;
+
+
 
 
     @CheckedTemplate
@@ -70,13 +89,25 @@ public class Users extends ControllerWithUser<User> {
     }
 
     @Path("/revokeApple")
-    public Response revokeApple(User user){
-        Log.info("Incomming Revoke apple user update p = " + user.userName);
-        //TODO revoke
-        // rm user
+    public void revokeApple(){
+        User user = getUser();
+        Log.info(String.format("Revoke apple for [%s] %n\tclient_id=%s%n\tclient_secret=%s%n\ttoken=%s",
+                user.userName,
+                appleClientId,
+                appleClientSecret,
+                accessToken.getToken()));
+        //fixme: currently not working | no details about the error (might be the clientID/secret)
+        //see https://developer.apple.com/documentation/accountorganizationaldatasharing/revoke-tokens
+        try {
+            renardeAppleClient.revokeAppleUser(appleClientId, appleClientSecret, accessToken.getToken(), "access_token");
+        } catch (ClientWebApplicationException e) {
+            flash("backendError", "Error on /revoke : " + e.getMessage());
+            user();
+        }
+        // rm user : NOT IMPL
         // logout
         try {
-            return security.makeLogoutResponse(new URI("/renarde"));
+            security.makeLogoutResponse(new URI("/login"));
         } catch (URISyntaxException e) {
             //can't happen
             throw new RuntimeException(e);

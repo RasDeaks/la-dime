@@ -10,6 +10,9 @@
         </style>
     {/moreStyles}
 
+    {#if flash:backendError}
+        <div class="alert alert-danger">Not available: {flash:backendError}</div>
+    {/if}
 
     <div>
         <h1>whoami [{user.userName}] </h1>
@@ -45,9 +48,6 @@
         <label for="tenantId">Méthode de connection</label>
         {#if user.tenantId}
         <input name="tenantId" value={user.tenantId} readonly />
-            {#if user.tenantId.isApple}
-                <button href="{uri:Users.revokeApple(user)}" >Revoke</button>
-            {/if}
             {#else}
                 <input name="tenantId" value="Manual" readonly />
         {/if}
@@ -56,9 +56,14 @@
             <button type="submit" class="btn btn-primary">Update</button>
         </div>
         </fieldset>
-
     {/form}
     </div>
+
+    {#if user.tenantId && user.tenantId.isApple}
+        <div><a class="btn btn-primary" href="{uri:Users.revokeApple(user)}" >Revoke Apple</a></div>
+        {#else}
+            <div><a class="btn btn-primary" href="{uri:Login.logout()}" >Logout</a></div>
+    {/if}
 
 
 
