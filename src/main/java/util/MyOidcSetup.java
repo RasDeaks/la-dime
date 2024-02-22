@@ -35,7 +35,7 @@ public class MyOidcSetup implements RenardeUserProvider, RenardeOidcHandler {
 
     @Override
     public RenardeUser findUser(String tenantId, String id) {
-        Log.info("Renarde provider db looking for : " + id + " | " + tenantId);
+        //Log.info("Renarde provider db looking for : " + id + " | " + tenantId);
         if(tenantId == null || tenantId.equals("manual")) {
             return User.findByUserName(id);
         } else {

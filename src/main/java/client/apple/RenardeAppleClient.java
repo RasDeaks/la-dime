@@ -1,4 +1,4 @@
-package service;
+package client.apple;
 
 import io.quarkus.logging.Log;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;

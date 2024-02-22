@@ -9,12 +9,16 @@ import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
 import io.smallrye.common.annotation.Blocking;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import model.Entreprise;
 import model.User;
+import org.hibernate.validator.constraints.Length;
+import org.jboss.resteasy.reactive.RestForm;
+import service.SirenService;
 
 import java.util.List;
 
@@ -22,6 +26,8 @@ import java.util.List;
 @Blocking
 public class Entreprises extends ControllerWithUser<User> {
 
+    @Inject
+    SirenService sirenService;
 
     @CheckedTemplate
     public static class Templates{
@@ -33,7 +39,7 @@ public class Entreprises extends ControllerWithUser<User> {
 
     @Path("/entreprises")
     public TemplateInstance entreprises(){
-        Log.info("All entreprise for logged user  : " + getUser().userName);
+        Log.info("ENTER All entreprise for logged user  : " + getUser().userName);
         return Templates.entreprises(Entreprise.listAll());
     }
 
@@ -64,5 +70,23 @@ public class Entreprises extends ControllerWithUser<User> {
         entreprises();
     }
 
+
+    @Path("/testSirene")
+    @POST
+    public TemplateInstance testSirene(
+            @RestForm
+            @Length(min = 9, max = 9, message = "Siren 9 char")
+            @Valid
+            String sirene){
+        if (validationFailed()){
+            entreprises();
+        }
+        Log.info("ENTER check siren, p=" + sirene);
+        Entreprise testLunatech = new Entreprise();
+        testLunatech.siren = sirene;
+        String resp = sirenService.verifySirenByApi(testLunatech);
+        flash("message", resp);
+        return entreprises();
+    }
 
 }

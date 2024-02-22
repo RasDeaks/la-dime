@@ -33,6 +33,16 @@ public class JavaExtensions {
         return s.toUpperCase();
     }
 
+    public static String prettySiren(String s){
+        if (null  != s && 9 == s.length()){
+            return String.format("%s %s %s",
+                    s.substring(0,3),
+                    s.substring(3,6),
+                    s.substring(6,9));
+        }
+        return s;
+    }
+
     public static boolean isApple(String s ) { return "apple".equalsIgnoreCase(s);}
 
 

@@ -62,11 +62,23 @@
         <tr>
         {! This invokes the JavaExtensions.capitalise(String) extension method !}
         <td>{entreprise.raisonSocial}</td>
-        <td>{entreprise.siren}</td>
+        <td>{entreprise.siren.prettySiren}</td>
         </tr>
       {/for}
     </table>
   </div>
+
+  {#form uri:Entreprises.testSirene()}
+    <div>
+    <input name="sirene" placeholder="SIREN" type="text" {#ifError 'sirene'}class="error"{/}/>
+    <input type="submit" value="Test Sirene"/>
+    </div>
+    {#ifError 'sirene'}
+      <div class="error">
+      Error: {#error 'sirene'/}
+      </div>
+    {/ifError}
+  {/form}
 
   <div>
     <div>

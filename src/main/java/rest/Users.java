@@ -2,7 +2,6 @@ package rest;
 
 import io.quarkiverse.renarde.security.ControllerWithUser;
 import io.quarkiverse.renarde.security.RenardeSecurity;
-import io.quarkiverse.renarde.util.RedirectException;
 import io.quarkus.logging.Log;
 import io.quarkus.oidc.AccessTokenCredential;
 import io.quarkus.oidc.IdToken;
@@ -20,7 +19,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.RestForm;
-import service.RenardeAppleClient;
+import client.apple.RenardeAppleClient;
 
 import java.net.URI;
 import java.net.URISyntaxException;
