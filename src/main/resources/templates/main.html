@@ -46,9 +46,10 @@
     </div>
     <main class="container">
         {#if flash:message}
-            <div class="alert alert-{flash:messageType ?: 'success'}">
-            {flash:message}
-            </div>
+            <div class="alert alert-{flash:messageType ?: 'success'}">{flash:message}</div>
+        {/if}
+        {#if flash:backendError}
+            <div class="alert alert-danger">{flash:backendError}</div>
         {/if}
         <!-- This inserts the body of your templates -->
         {#insert /}

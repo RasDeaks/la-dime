@@ -1,12 +1,15 @@
 package client.insee;
 
+import client.insee.dto.BaseInseeResponse;
 import client.insee.dto.ReponseEtablissement;
 import client.insee.dto.ReponseUnitesLegales;
+import error.DimeWsException;
 import io.quarkus.logging.Log;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -25,16 +28,19 @@ public interface InseeSireneApiClient {
 
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {
-        if (response.getStatus() == 200){
-            // never happen I guess
-            Log.info("200 response from INSEE Sirene");
-        } else if (response.getStatus() == 500){
-            Log.error("500 response from INSEE Sirene - they might be down, it happen");
-            return new RuntimeException("Failed to call INSEE");
+        // ClientExceptionMapper: only called for 400 and higher responses
+        // map to custom Exception
+        if (response.getStatus() == 500){
+            Log.error("INSEE Sirene - SERVER ERROR, they might be down, it happen");
+            return new DimeWsException(500, "INSEE server error, try again later");
         } else {
-            String s = response.readEntity(String.class);
-            Log.error("BAD REQUEST:\n"  + s);
+            try {
+                BaseInseeResponse s = response.readEntity(BaseInseeResponse.class);
+                Log.error("INSEE Sirene - BAD REQUEST:"  + s.header.message);
+                return new DimeWsException(response.getStatus(), String.format("INSEE client error : %s", s.header.message));
+            } catch (ProcessingException e) {
+                return new DimeWsException(response.getStatus(), "INSEE client error : UNKNOWN");
+            }
         }
-        return null;
     }
 }

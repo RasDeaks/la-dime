@@ -1,6 +1,8 @@
 package rest;
 
 
+import error.DimeError;
+import error.DimeWsException;
 import io.quarkiverse.renarde.router.Router;
 import io.quarkiverse.renarde.security.ControllerWithUser;
 import io.quarkiverse.renarde.util.RedirectException;
@@ -56,37 +58,42 @@ public class Entreprises extends ControllerWithUser<User> {
         }
         // basic hibernate validation (size, pattern etc..)
         if (validationFailed()){
-            flash("message", "SIREN non valide");
+            flash("backendError", "SIREN non valide");
             Log.info("Validation of PUT /entreprises Failed !");
             entreprises();
         }
-        // siren must be unique
-        if (Entreprise.count("siren", entreprise.siren) > 0){
-            Log.info(String.format("Siren %s already known", entreprise.siren));
-            flash("message", "Le siren lé innocent !");
-            entreprises();
+        try {
+            String resp = sirenService.verifyAndSaveCompany(entreprise);
+            flash("message", resp);
+        } catch (DimeWsException | DimeError e) {
+            flash("backendError", e.getMessage());
         }
-        entreprise.persist();
         entreprises();
     }
 
 
     @Path("/testSirene")
     @POST
-    public TemplateInstance testSirene(
+    public void testSirene(
             @RestForm
             @Length(min = 9, max = 9, message = "Siren 9 char")
             @Valid
             String sirene){
+        // early exit on Validation failure
         if (validationFailed()){
             entreprises();
         }
         Log.info("ENTER check siren, p=" + sirene);
         Entreprise testLunatech = new Entreprise();
         testLunatech.siren = sirene;
-        String resp = sirenService.verifySirenByApi(testLunatech);
-        flash("message", resp);
-        return entreprises();
+
+        try {
+            String resp = sirenService.verifyAndSaveCompany(testLunatech);
+            flash("message", resp);
+        } catch (DimeWsException | DimeError e) {
+            flash("backendError", e.getMessage());
+        }
+        entreprises();
     }
 
 }

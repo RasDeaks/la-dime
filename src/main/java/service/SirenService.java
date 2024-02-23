@@ -3,12 +3,15 @@ package service;
 import client.insee.InseeSireneApiClient;
 import client.insee.dto.ReponseEtablissement;
 import client.insee.dto.ReponseUnitesLegales;
+import client.insee.dto.parts.PeriodeUniteLegale;
+import error.DimeError;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import model.Entreprise;
+import model.Etablissement;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jboss.resteasy.reactive.ClientWebApplicationException;
+import util.InseeApiUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,84 +25,74 @@ public class SirenService {
     @ConfigProperty(name = "quarkus.rest-client.\"client.insee.InseeSireneApiClient\".auth")
     String authHeader;
 
-    public String verifySirenByApi(Entreprise entreprise){
-        Log.info(String.format("start callBySiren %n\tauth=%s%n\tsiren=%s", authHeader, entreprise.siren));
+    public String verifyAndSaveCompany(Entreprise entreprise) throws DimeError {
+        Log.info(String.format("START callBySiren, siren=%s", entreprise.siren));
 
         // call INSEE api /siren
-        ReponseUnitesLegales bySiren = null;
-        try {
-            bySiren = sireneApiClient.getBySiren(authHeader, entreprise.siren);
-        } catch (ClientWebApplicationException e) {
-            if (404 == e.getResponse().getStatus()){
-                return String.format("Siren [%s] NOT FOUND !", entreprise.siren);
-            }
-            // dirty dirty
-            throw new RuntimeException(e);
-        }
-        //DixUtils.printThisShit(bySiren);
-        if (null == bySiren.uniteLegale || null == bySiren.uniteLegale.periodesUniteLegale || bySiren.uniteLegale.periodesUniteLegale.isEmpty()){
-            return String.format("Siren [%s] UNKNOWN !", entreprise.siren);
+        ReponseUnitesLegales sirenResp = sireneApiClient.getBySiren(authHeader, entreprise.siren);
+        Log.info(String.format("END status=%s, message= [%s]", sirenResp.header.statut, sirenResp.header.message));
+
+        // verify activity & extract SIRETs or exit
+        List<PeriodeUniteLegale> activeNicCodes = InseeApiUtils.filterActiveLegalUnit(sirenResp);
+        Log.info(String.format("%s 'Etablissement(s)' found for Siren [%s]", activeNicCodes.size(), entreprise.siren));
+        if (activeNicCodes.isEmpty()){
+            throw new DimeError(String.format("Siren [%s] not ACTIVE !", entreprise.siren));
         }
 
-        // extract active SIRETs
-        List<String> nicCodes = bySiren.uniteLegale.periodesUniteLegale.stream()
-                .filter(periode -> null == periode.dateFin) // NO END DATE
-                .filter(periode -> "A".equalsIgnoreCase(periode.etatAdministratifUniteLegale)) // STILL ACTIVE
-                .map(periode -> periode.nicSiegeUniteLegale)
-                .toList();
-        Log.info(String.format("%s 'Etablissement(s)' found for Siren [%s]", nicCodes.size(), entreprise.siren));
-        if (nicCodes.isEmpty()){
-            return String.format("Siren [%s] not ACTIVE !", entreprise.siren);
-        }
+        // call INSEE api /siret for additional infos
+        List<ReponseEtablissement> siretsResp = activeNicCodes.stream().map(nic -> {
+            Log.info(String.format("START callBySiret, siret=%s", entreprise.siren + nic.nicSiegeUniteLegale));
+            ReponseEtablissement siretResp = sireneApiClient.getBySiret(authHeader, entreprise.siren + nic.nicSiegeUniteLegale);
+            Log.info(String.format("END status=%s, message= [%s]", siretResp.header.statut, siretResp.header.message));
+            return siretResp;
+        }).toList();
 
-        // call INSEE api /siret
-        List<ReponseEtablissement> etablissements = nicCodes.stream().map(nic -> sireneApiClient.getBySiret(authHeader, entreprise.siren + nic)).toList();
-        // filter only active SIRET
-        List<ReponseEtablissement> etabFiltered = etablissements.stream()
-                .filter(etab -> 200 == etab.header.statut)
-                .filter(etab -> null != etab.etablissement)
-                .filter(etab -> null != etab.etablissement.uniteLegale)
-                .filter(etab -> "A".equalsIgnoreCase(etab.etablissement.uniteLegale.etatAdministratifUniteLegale)) // must belong to an active Legal Entity
-                .filter(etab -> null != etab.etablissement.periodesEtablissement)
-                .filter(etab -> !etab.etablissement.periodesEtablissement.isEmpty())
-                .filter(etab -> etab.etablissement.periodesEtablissement.stream()
-                        .anyMatch(period -> null == period.dateFin &&
-                                "A".equalsIgnoreCase(period.etatAdministratifEtablissement))) //active = At least 1 period with not end date and 'active'
-                .toList();
-        Log.info(String.format("%s ACTIVE 'Etablissement(s)' found for Siren [%s]", etabFiltered.size(), entreprise.siren));
-        //DixUtils.printThisShit(etabFiltered);
-        if (etabFiltered.isEmpty()){
-            return String.format("Siren [%s] has no ACTIVE 'etablissement' !", entreprise.siren);
+        // filter only active SIRET or exit
+        List<ReponseEtablissement> siretFiltered = InseeApiUtils.filterActiveEstablishment(siretsResp);
+        Log.info(String.format("%s ACTIVE 'Etablissement(s)' checked for Siren [%s]", siretFiltered.size(), entreprise.siren));
+        if (siretFiltered.isEmpty()){
+            throw new DimeError(String.format("Siren [%s] has no ACTIVE 'etablissement' !", entreprise.siren));
         }
 
         // Save Company info in DB
-        persistCompanyInfo(etabFiltered.get(0));
+        List<Etablissement> etablissements = persistCompanyInfo(siretFiltered);
+        Log.info(String.format("Company updated, %s Establishement(s) updated", etablissements.size()));
 
-
-        // return list of "etablissement"
-        String joinActiveSirets = etabFiltered.stream()
-                .map(etablissement ->
-                        String.format("[%s - %s %s %s, %s %s]",
-                                etablissement.etablissement.siret,
-                                etablissement.etablissement.adresseEtablissement.numeroVoieEtablissement,
-                                etablissement.etablissement.adresseEtablissement.typeVoieEtablissement,
-                                etablissement.etablissement.adresseEtablissement.libelleVoieEtablissement,
-                                etablissement.etablissement.adresseEtablissement.codePostalEtablissement,
-                                etablissement.etablissement.adresseEtablissement.libelleCommuneEtablissement))
+        // return pretty print of "etablissement(s)"
+        return etablissements.stream()
+                .map(InseeApiUtils::prettyPrintEstablishment)
                 .collect(Collectors.joining(" - "));
-        return bySiren.uniteLegale.periodesUniteLegale.stream()
-                .map(periode -> String.format("[%s] FOUND : %s", periode.denominationUniteLegale, joinActiveSirets))
-                .findFirst().orElse(String.format("Siren [%s] NOT  FOUND !", entreprise.siren));
     }
 
 
-    private void persistCompanyInfo(ReponseEtablissement reponseEtablissement){
-        Entreprise bySiren = (Entreprise) Entreprise.find("siren", reponseEtablissement.etablissement.siren).firstResult();
-        if (null == bySiren){
-            Entreprise newCompany = new Entreprise();
-            newCompany.siren = reponseEtablissement.etablissement.siren;
-            newCompany.raisonSocial = reponseEtablissement.etablissement.uniteLegale.denominationUniteLegale;
-            newCompany.persist();
-        } // else update existing ?
+    private List<Etablissement> persistCompanyInfo(List<ReponseEtablissement> etablissementActifs){
+        // get UniteLegale from first result
+        ReponseEtablissement firstEtab = etablissementActifs.get(0);
+        // upsert Entreprise
+        Entreprise bySiren = (Entreprise) Entreprise.find("siren", firstEtab.etablissement.siren)
+                .firstResultOptional().orElse(new Entreprise());
+        bySiren.siren = firstEtab.etablissement.siren;
+        bySiren.raisonSocial = firstEtab.etablissement.uniteLegale.denominationUniteLegale;
+        // upsert Etablissement
+        List<Etablissement> etablissements = etablissementActifs.stream().map(etab -> {
+            Etablissement etablissement = (Etablissement) Etablissement.find("siret", etab.etablissement.siret)
+                    .firstResultOptional()
+                    .orElse(new Etablissement());
+            etablissement.entreprise = bySiren;
+            etablissement.siret = etab.etablissement.siret;
+            etablissement.denominationUniteLegale = etab.etablissement.uniteLegale.denominationUniteLegale;
+            if (null != etab.etablissement.adresseEtablissement) {
+                etablissement.numVoie = etab.etablissement.adresseEtablissement.numeroVoieEtablissement;
+                etablissement.typeVoie = etab.etablissement.adresseEtablissement.typeVoieEtablissement;
+                etablissement.libelleVoie = etab.etablissement.adresseEtablissement.libelleVoieEtablissement;
+                etablissement.codePostal = etab.etablissement.adresseEtablissement.codePostalEtablissement;
+                etablissement.libelleCommune = etab.etablissement.adresseEtablissement.libelleCommuneEtablissement;
+            }
+            return etablissement;
+        }).toList();
+
+        bySiren.persist();
+        etablissements.forEach(etablissement -> etablissement.persist());
+        return etablissements;
     }
 }

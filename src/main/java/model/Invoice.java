@@ -4,6 +4,8 @@ import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.panache.common.Sort;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import org.jboss.resteasy.reactive.RestForm;
 import validator.DateInPast;
@@ -12,6 +14,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
+@Table(name = "invoice", uniqueConstraints = @UniqueConstraint(columnNames = {"numFacture"}))
 public class Invoice extends PanacheEntity {
 
     @ManyToOne
