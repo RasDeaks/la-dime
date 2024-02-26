@@ -1,9 +1,9 @@
 package rest;
 
+import error.DimeError;
+import error.DimeWsException;
 import io.quarkiverse.renarde.router.Router;
-import io.quarkiverse.renarde.security.ControllerWithUser;
 import io.quarkiverse.renarde.util.RedirectException;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
@@ -20,20 +20,28 @@ import model.User;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 import service.ControlFunc;
+import service.SirenService;
 
 import java.util.List;
 
 @Authenticated
 @Blocking
-public class Invoices extends ControllerWithUser<User> {
+public class Invoices extends HxControllerWithUser<User> {
 
     @Inject
     ControlFunc controlFunc;
 
+    @Inject
+    SirenService sirenService;
+
     @CheckedTemplate
     public static class Templates{
         public static native TemplateInstance invoices(List<Invoice> invoices);
-        public static native TemplateInstance invoice(Invoice invoice, List<Entreprise> entreprises);
+
+        //https://docs.quarkiverse.io/quarkus-renarde/dev/advanced.html#htmx
+        public static native TemplateInstance invoices$invoiceRow(Invoice invoice);
+
+        public static native TemplateInstance invoice(Invoice invoice);
     }
 
     @Path("/invoices")
@@ -72,7 +80,7 @@ public class Invoices extends ControllerWithUser<User> {
 
     @Path(("/invoice"))
     @POST
-    public void updateInvoice(@RestPath Long invoiceId, Invoice dto, @RestForm("sirenVendeur") String sirenVendeur){
+    public void updateInvoice(@RestPath Long invoiceId, Invoice dto){
         checkUserStatus(getUser());
 
         // find Facture or 404
@@ -80,8 +88,7 @@ public class Invoices extends ControllerWithUser<User> {
         notFoundIfNull(byId);
 
         // update value and save
-        // fixme: nested object 'vendeur' always null in DTO -> query param vendeur.siren ignored, renamed to sirenVendeur
-        byId.vendeur = (Entreprise) Entreprise.find("siren", sirenVendeur).firstResult();
+        byId.vendeur = (Entreprise) Entreprise.find("siren", dto.vendeur.siren).firstResult();
         byId.persist();
         displayInvoice(invoiceId);
     }
@@ -93,20 +100,46 @@ public class Invoices extends ControllerWithUser<User> {
         if (byId == null){
             notFound(String.format("Facture [%s] does not exist",id));
         }
-        notFoundIfNull(byId);
+        notFoundIfNull(byId); // redondant...
         if (!byId.user.id.equals(getUser().id)) {
             forbidden("Not your Facture");
         }
-        return Templates.invoice(byId, Entreprise.listAll());
+        return Templates.invoice(byId);
     }
 
     @POST
-    public void delete(@RestPath long id){
+    public TemplateInstance delete(@RestPath long id){
         checkUserStatus(getUser());
-        PanacheEntityBase byId = Invoice.findById(id);
+        Invoice byId = (Invoice) Invoice.findById(id);
         notFoundIfNull(byId);
         byId.delete();
-        invoices();
+        if (isHxRequest()) {
+            return Templates.invoices$invoiceRow(byId);
+        }else {
+            return invoices();
+        }
+    }
+
+
+    @POST
+    public TemplateInstance attachNewVendeur(@RestPath Long id, @RestForm String sirene){
+        Log.info("ENTER attach by siren, p=" + sirene);
+        Invoice byId = Invoice.findById(id);
+        if (byId == null){
+            notFound(String.format("Facture [%s] does not exist",id));
+        }
+        Entreprise testLunatech = new Entreprise();
+        testLunatech.siren = sirene;
+        try {
+            String resp = sirenService.verifyAndSaveCompany(testLunatech);
+            flash("message", resp);
+            byId.vendeur = Entreprise.find("siren", sirene).firstResult();
+            byId.persist();
+        } catch (DimeWsException | DimeError e) {
+            flash("backendError", e.getMessage());
+            return displayInvoice(id);
+        }
+        return displayInvoice(id);
     }
 
     // dirty fix for CONFIRMATION_REQUIRED user (getUser will filter status, they are null)

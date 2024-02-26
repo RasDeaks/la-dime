@@ -46,32 +46,6 @@ public class Entreprises extends ControllerWithUser<User> {
     }
 
 
-    @Path("/entreprises")
-    @POST
-    public void createEntreprise(@Valid Entreprise entreprise){
-        Log.info("ENTER POST /entreprises");
-        User user = getUser();
-        // make sure user registered fixme : add role and avoid this boiler plate
-        if (user == null){
-            Log.info("USER null, CONFIRMATION REQUIRED");
-            throw new RedirectException(Response.seeOther(Router.getURI(Login::logout)).build());
-        }
-        // basic hibernate validation (size, pattern etc..)
-        if (validationFailed()){
-            flash("backendError", "SIREN non valide");
-            Log.info("Validation of PUT /entreprises Failed !");
-            entreprises();
-        }
-        try {
-            String resp = sirenService.verifyAndSaveCompany(entreprise);
-            flash("message", resp);
-        } catch (DimeWsException | DimeError e) {
-            flash("backendError", e.getMessage());
-        }
-        entreprises();
-    }
-
-
     @Path("/testSirene")
     @POST
     public void testSirene(

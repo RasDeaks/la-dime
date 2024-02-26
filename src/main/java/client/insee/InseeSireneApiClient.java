@@ -36,7 +36,7 @@ public interface InseeSireneApiClient {
         } else {
             try {
                 BaseInseeResponse s = response.readEntity(BaseInseeResponse.class);
-                Log.error("INSEE Sirene - BAD REQUEST:"  + s.header.message);
+                Log.warn("INSEE Sirene - BAD REQUEST:"  + s.header.message);
                 return new DimeWsException(response.getStatus(), String.format("INSEE client error : %s", s.header.message));
             } catch (ProcessingException e) {
                 return new DimeWsException(response.getStatus(), "INSEE client error : UNKNOWN");

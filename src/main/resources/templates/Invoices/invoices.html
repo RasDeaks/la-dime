@@ -121,7 +121,44 @@
  <br>
  <br>
 
-    {#invoiceTable invoices=invoices /}
+
+
+{! Iterate over our invoice items !}
+<div class="table-wrapper">
+    <table class="fl-table">
+        <tr>
+            <th>Numéro</th>
+            <th>Date Facturation</th>
+            <th>Action</th>
+        </tr>
+        {#for invoice in invoices}
+        {#fragment id="invoiceRow"}
+            <tr id="row-{invoice.id}">
+            {! This invokes the JavaExtensions.capitalise(String) extension method !}
+            <td>{invoice.numFacture.toUpperCase}</td>
+            <td>{invoice.dateFacturation}</td>
+
+            <td>
+            <div class="form-style-6">
+                {! a button to go to detail /invoices/{id} !}
+                <input type="button" onclick="window.location.href='{uri:Invoices.displayInvoice(invoice.id)}'" value="{invoice.numFacture.capitalise}">
+                {! a button to delete /invoices/{id} !}
+                {#form uri:Invoices.delete(invoice.id) }
+                <button type="submit" class="btn1" title="DELETE"
+                        hx-post="{uri:Invoices.delete(invoice.id)}" hx-target="#row-{invoice.id}" hx-swap="delete"
+                        hx-vals='{"{inject:csrf.parameterName}": "{inject:csrf.token}"}'><i class="bi-trash"></i></button>
+                {/form}
+            </div>
+            </td>
+            </tr>
+        {/fragment}
+        {/for}
+    </table>
+
+
+</div>
+
+<script src="https://unpkg.com/htmx.org@1.9.5" integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO" crossorigin="anonymous"></script>
 
 
 {/include}
