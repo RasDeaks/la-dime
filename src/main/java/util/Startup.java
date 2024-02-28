@@ -1,5 +1,6 @@
 package util;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
@@ -10,10 +11,7 @@ import jakarta.enterprise.event.Observes;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.transaction.Transactional;
-import model.Entreprise;
-import model.Invoice;
-import model.User;
-import model.UserStatus;
+import model.*;
 
 @ApplicationScoped
 @Blocking //idk, fromage made it (Transactionnal on method should be enough)
@@ -64,6 +62,17 @@ public class Startup {
             dix.entreprise = lunatech;
             dix.persist();
 
+            System.err.println("Adding user Hervé");
+            User herve = new User();
+            herve.email = "vr@example.com";
+            herve.firstName = "Hervé";
+            herve.lastName = "V-R";
+            herve.userName = "VR";
+            herve.password = BcryptUtil.bcryptHash("password");
+            herve.status = UserStatus.REGISTERED;
+            herve.isAdmin = false;
+            herve.persist();
+
             System.err.println("Adding facture 001");
             // Fromage de RedHat facture un PC a lunatech
             Invoice invoiceFromage = new Invoice();
@@ -83,6 +92,15 @@ public class Startup {
             invoiceDix.acheteur = redHat;
             invoiceDix.vendeur = lunatech;
             invoiceDix.persist();
+
+            System.err.println("Adding line for facture 002");
+            Line line = new Line();
+            line.description = "PRODUIT_001";
+            line.unitPrice = "10";
+            line.qtty = new BigDecimal(5);
+            line.taxRate = "20";
+            line.invoice = invoiceDix;
+            line.persist();
 
 
         }

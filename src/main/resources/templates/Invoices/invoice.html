@@ -65,12 +65,9 @@
             <span>Le vendeur : </span>
             <span>{invoice.vendeur.raisonSocial}</span>
 
-
             <button id="myBtn">Change Vendeur</button>
-
             <!-- The Modal -->
             <div id="myModal" class="modal">
-
                 <!-- Modal content -->
                 <div class="modal-content">
                     <span class="close">&times;</span>
@@ -90,15 +87,72 @@
 
             </div>
         </div>
-
-
-
-
     </div>
+
+
+    <div>
+        <div class="table-wrapper">
+            <table class="table">
+              <thead class="table-dark">
+                <tr>
+                    <th>Description</th>
+                    <th>Quantité</th>
+                    <th>Prix Unit.</th>
+                    <th>Taux TVA</th>
+                    <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="lines">
+                {#for line in lines}
+                {#fragment id="lineRow"}
+                    <tr id="row-{line.id}">
+                    <td><input name="description" value="{line.description}" hx-post="{uri:Invoices.updateDescription(line.id)}" hx-target="#row-{line.id}" hx-swap="outerHTML"
+          	                hx-vals='{"{inject:csrf.parameterName}": "{inject:csrf.token}"}'/></td>
+                    <td><input  name="qttyDto" value="{line.qtty}" hx-post="{uri:Invoices.updateQtty(line.id)}" hx-target="#row-{line.id}" hx-swap="outerHTML"
+          	                hx-vals='{"{inject:csrf.parameterName}": "{inject:csrf.token}"}'  /></td>
+                    <td><input  name="unitPrice" value="{line.unitPrice}" hx-post="{uri:Invoices.updateUnitPrice(line.id)}" hx-target="#row-{line.id}" hx-swap="outerHTML"
+          	                hx-vals='{"{inject:csrf.parameterName}": "{inject:csrf.token}"}'/></td>
+                    <td><input  name="taxRate" value="{line.taxRate}" hx-post="{uri:Invoices.updateTaxRate(line.id)}" hx-target="#row-{line.id}" hx-swap="outerHTML"
+          	                hx-vals='{"{inject:csrf.parameterName}": "{inject:csrf.token}"}'/></td>
+                    <td>
+                        <button type="submit" class="btn btn-danger" title="delete"
+          	                hx-post="{uri:Invoices.removeLine(line.id)}" hx-target="#row-{line.id}" hx-swap="delete"
+          	                hx-vals='{"{inject:csrf.parameterName}": "{inject:csrf.token}"}'><i class="bi-trash"></i>
+          	            </button>
+          	        </td>
+                    </tr>
+                {/fragment}
+                {/for}
+                <tr id="new">
+
+                </tr>
+                {#form uri:Invoices.addLine(invoice.id)}
+                <tr>
+                    <td><input name="description" placeholder="Description" type="text" value="{newLine.description}" /></td>
+                    <td><input name="qttyDto" placeholder="Quantity" type="text"  {#ifError 'qttyDto'}class="error"{/} value="{newLine.qtty}"  /></td>
+                    <td><input name="unitPrice" placeholder="Unit Price" type="text" value="{newLine.unitPrice}" /></td>
+                    <td><input name="taxRate" placeholder="Rate" type="text" value="{newLine.taxRate}" /></td>
+                    <td><input type="submit" value="Add line"/></td>
+                </tr>
+                {/form}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+     {#ifError 'qttyDto'}
+      <div class="error">
+      Error: {#error 'qttyDto'/}
+      </div>
+    {/ifError}
+
+
+    <br/>
+
     <div>
     {#form uri:Invoices.updateInvoice(invoice.id, invoice)}
             <div>
-            <button type="submit" class="btn btn-primary" disabled>Update ma facture</button>
+            <button type="submit" class="btn btn-primary" disabled>Valider & Générer une facture électronique !</button>
             </div>
 
     {/form}
@@ -131,5 +185,7 @@
             }
         }
     </script>
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+
 
 {/include}
