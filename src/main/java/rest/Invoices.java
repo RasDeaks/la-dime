@@ -9,9 +9,9 @@ import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
 import io.smallrye.common.annotation.Blocking;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
@@ -62,6 +62,7 @@ public class Invoices extends HxControllerWithUser<User> {
 
     @Path("/invoices")
     @POST
+    @RolesAllowed("affiliated")
     public void initInvoice(@Valid Invoice invoice){
         User user = getUser();
         checkUserStatus(user);

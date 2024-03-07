@@ -49,6 +49,9 @@ public class User extends PanacheEntity implements RenardeUser {
         if(isAdmin) {
             roles.add("admin");
         }
+        if (entreprise != null){
+            roles.add("affiliated");
+        }
         return roles;
     }
 
